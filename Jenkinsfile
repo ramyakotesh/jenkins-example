@@ -1,32 +1,21 @@
 pipeline {
-    agent any
-
-    stages {
-        stage ('Compile Stage') {
-
-            steps {
-                withMaven(maven : 'maven_3_5_0') {
-                    sh 'mvn clean compile'
-                }
-            }
-        }
-
-        stage ('Testing Stage') {
-
-            steps {
-                withMaven(maven : 'maven_3_5_0') {
-                    sh 'mvn test'
-                }
-            }
-        }
-
-
-        stage ('Deployment Stage') {
-            steps {
-                withMaven(maven : 'maven_3_5_0') {
-                    sh 'mvn deploy'
-                }
-            }
-        }
+  agent {label 'linux'}
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+  }
+  stages {
+    stage('Build') {
+      steps {
+        sh './gradlew clean check --no-daemon'
+      }
     }
+  }
+  post {
+    always {
+        junit(
+          allowEmptyResults: true, 
+          testResults: '**/build/test-results/test/*.xml'
+        )
+    }
+  }
 }
